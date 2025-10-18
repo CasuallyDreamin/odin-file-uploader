@@ -7,11 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Directory {
+  id        String      @id @default(uuid())
+  name      String
+  parentId  String?
+  parent    Directory?  @relation("DirectoryChildren", fields: [parentId], references: [id])
+  children  Directory[] @relation("DirectoryChildren")
+  files     File[]      @relation("DirectoryFiles")
+  createdAt DateTime    @default(now())
+}
+
 model File {
-  id         String   @id @default(uuid())
+  id           String     @id @default(uuid())
   originalName String
   storagePath  String
   mimeType     String
   size         Int
-  uploadedAt   DateTime @default(now())
+  directoryId  String?
+  directory    Directory? @relation("DirectoryFiles", fields: [directoryId], references: [id])
+  uploadedAt   DateTime   @default(now())
 }

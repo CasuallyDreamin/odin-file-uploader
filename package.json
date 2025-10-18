@@ -4,6 +4,7 @@
   "description": "TheOdinProject's File Uploader from the Node.js section of the JS path",
   "main": "index.js",
   "scripts": {
+    "dev": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
