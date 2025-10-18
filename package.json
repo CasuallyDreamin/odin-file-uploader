@@ -1,0 +1,27 @@
+{
+  "name": "odin-file-uploader",
+  "version": "1.0.0",
+  "description": "TheOdinProject's File Uploader from the Node.js section of the JS path",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CasuallyDreamin/odin-file-uploader.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/CasuallyDreamin/odin-file-uploader/issues"
+  },
+  "homepage": "https://github.com/CasuallyDreamin/odin-file-uploader#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "postgres": "^3.4.7",
+    "prisma": "^6.17.1"
+  }
+}
