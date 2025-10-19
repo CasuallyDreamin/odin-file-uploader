@@ -20,6 +20,11 @@ export const UPLOAD_DIR = process.env.UPLOAD_DIR
 
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
+const __dirname = path.resolve();
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Mount routes
 app.use("/", fileBrowserRoutes);
 app.use('/api', apiRoutes);

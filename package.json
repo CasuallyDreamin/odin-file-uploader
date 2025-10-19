@@ -21,6 +21,7 @@
   "homepage": "https://github.com/CasuallyDreamin/odin-file-uploader#readme",
   "dependencies": {
     "@prisma/client": "^6.17.1",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "multer": "^2.0.2",
