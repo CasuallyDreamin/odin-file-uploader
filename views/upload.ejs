@@ -2,12 +2,12 @@
 
 <form action="/api/upload" method="POST" enctype="multipart/form-data">
   <label for="directory">Target Directory:</label>
-  <select name="directoryId" id="directory">
-    <option value="">Root</option>
-    <% directories.forEach(dir => { %>
-      <option value="<%= dir.id %>"><%= dir.name %></option>
-    <% }) %>
-  </select>
+    <select name="directoryId" id="directory">
+      <option value="">Root</option>
+      <% directories.forEach(dir => { %>
+        <option value="<%= dir.id %>"><%= dir.name %></option>
+      <% }) %>
+    </select>
 
   <input type="file" name="files" multiple required>
   <button type="submit">Upload</button>

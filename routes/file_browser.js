@@ -20,6 +20,30 @@ async function getTopDirectories() {
   }
 }
 
+// Helper: flatten directories recursively
+async function getAllDirectories() {
+  try {
+    const resp = await axios.get(`${API_BASE}/directories/top`);
+    const topDirs = resp.data.success ? resp.data.directories : [];
+
+    const flatList = [];
+
+    function traverse(dir, prefix = '') {
+      flatList.push({ id: dir.id, name: prefix + dir.name });
+      if (dir.children) {
+        dir.children.forEach(child => traverse(child, prefix + dir.name + '/'));
+      }
+    }
+
+    topDirs.forEach(d => traverse(d));
+    return flatList;
+  } catch (err) {
+    console.error('Failed fetching all directories:', err.message);
+    return [];
+  }
+}
+
+
 /* ------------------------------
    Homepage — list top-level directories & recent files
 --------------------------------*/
@@ -60,7 +84,7 @@ router.get('/directory/:id', async (req, res) => {
 --------------------------------*/
 router.get('/upload', async (req, res) => {
   try {
-    const directories = await getTopDirectories();
+    const directories = await getAllDirectories();
     res.render('upload', { title: 'Upload Files', directories });
   } catch (err) {
     console.error(err.message);
