@@ -44,6 +44,21 @@ router.post('/directory', async (req, res) => {
   }
 });
 
+// GET /api/directories/top
+router.get('/directories/top', async (req, res) => {
+  try {
+    const dirs = await prisma.directory.findMany({
+      where: { parentId: null },
+      include: { children: true, files: true },
+    });
+    res.json({ success: true, directories: dirs });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch top-level directories' });
+  }
+});
+
+
 // List directory contents
 router.get('/directory/:id', async (req, res) => {
   try {
@@ -67,7 +82,7 @@ router.get('/directory/:id', async (req, res) => {
    FILE ENDPOINTS
 --------------------------------*/
 
-// Upload files
+// Upload files — redirect to '/' on success
 router.post('/upload', upload.array('files', 10), async (req, res) => {
   try {
     const { directoryId } = req.body;
@@ -75,18 +90,17 @@ router.post('/upload', upload.array('files', 10), async (req, res) => {
 
     if (directoryId) {
       const dir = await prisma.directory.findUnique({ where: { id: directoryId } });
-      if (!dir) return res.status(400).json({ error: 'Directory not found' });
+      if (!dir) return res.status(400).send('Directory not found');
 
       targetDir = path.join(UPLOAD_DIR, directoryId);
       if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
     }
 
-    const created = [];
     for (const f of req.files) {
       const filePath = path.join(targetDir, f.originalname);
       fs.renameSync(f.path, filePath);
 
-      const record = await prisma.file.create({
+      await prisma.file.create({
         data: {
           originalName: f.originalname,
           storagePath: path.relative(UPLOAD_DIR, filePath),
@@ -95,14 +109,14 @@ router.post('/upload', upload.array('files', 10), async (req, res) => {
           directoryId: directoryId || null,
         },
       });
-
-      created.push(record);
     }
 
-    res.json({ success: true, files: created });
+    // Redirect back to root or to directory if specified
+    const redirectPath = directoryId ? `/browser/directory/${directoryId}` : '/';
+    res.redirect(redirectPath);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Upload failed' });
+    res.status(500).send('Upload failed');
   }
 });
 

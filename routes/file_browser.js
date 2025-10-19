@@ -1,39 +1,114 @@
 import express from 'express';
+import axios from 'axios';
+import fs from 'fs';
+import FormData from 'form-data';
+import { UPLOAD_DIR } from '../app.js';
 
 const router = express.Router();
+const API_BASE = 'http://localhost:4000/api';
 
-// homepage — list directories
+/* ------------------------------
+   Helper: fetch top-level directories
+--------------------------------*/
+async function getTopDirectories() {
+  try {
+    const resp = await axios.get(`${API_BASE}/directories/top`);
+    return resp.data.success ? resp.data.directories : [];
+  } catch (err) {
+    console.error('Failed fetching top directories:', err.message);
+    return [];
+  }
+}
+
+/* ------------------------------
+   Homepage — list top-level directories & recent files
+--------------------------------*/
 router.get('/', async (req, res) => {
   try {
-    const resp = await fetch('http://localhost:4000/api/files');
-    const files = await resp.json();
+    const filesResp = await axios.get(`${API_BASE}/files`);
+    const files = filesResp.data;
 
-    const dirResp = await fetch('http://localhost:4000/api/directory/ROOT_ID'); // optional if you track top-level dirs
-    const directories = dirResp.ok ? await dirResp.json() : [];
+    const directories = await getTopDirectories();
 
     res.render('index', { title: 'File Browser', files, directories });
   } catch (err) {
-    console.error(err);
-    res.status(500).render('error', { message: 'Failed to load data' });
+    console.error('Failed fetching homepage data:', err.message);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load data' });
   }
 });
 
-// upload page
-router.get('/upload', async (req, res) => {
-  res.render('upload', { title: 'Upload Files' });
-});
-
-// directory view
+/* ------------------------------
+   Directory view
+--------------------------------*/
 router.get('/directory/:id', async (req, res) => {
   try {
-    const resp = await fetch(`http://localhost:4000/api/directory/${req.params.id}`);
-    const data = await resp.json();
-    if (!data.success) return res.status(404).render('error', { message: 'Directory not found' });
+    const { id } = req.params;
+    const resp = await axios.get(`${API_BASE}/directory/${id}`);
+    const data = resp.data;
+
+    if (!data.success) return res.status(404).render('error', { title: 'Error', message: 'Directory not found' });
 
     res.render('directory', { title: data.directory.name, directory: data.directory });
   } catch (err) {
-    console.error(err);
-    res.status(500).render('error', { message: 'Failed to load directory' });
+    console.error(err.message);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load directory' });
+  }
+});
+
+/* ------------------------------
+   Upload page
+--------------------------------*/
+router.get('/upload', async (req, res) => {
+  try {
+    const directories = await getTopDirectories();
+    res.render('upload', { title: 'Upload Files', directories });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load upload page' });
+  }
+});
+
+/* ------------------------------
+   POST Create new directory — redirects back
+--------------------------------*/
+router.post('/directory', async (req, res) => {
+  try {
+    const { name, parentId } = req.body;
+    await axios.post(`${API_BASE}/directory`, { name, parentId: parentId || null });
+
+    const redirectPath = parentId ? `/browser/directory/${parentId}` : '/browser';
+    res.redirect(redirectPath);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to create directory' });
+  }
+});
+
+/* ------------------------------
+   POST Upload files — redirects back
+--------------------------------*/
+router.post('/upload', async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).render('error', { title: 'Error', message: 'No files selected' });
+    }
+
+    const { directoryId } = req.body;
+    const formData = new FormData();
+
+    for (const f of req.files) {
+      formData.append('files', fs.createReadStream(f.path), f.originalname);
+    }
+
+    if (directoryId) formData.append('directoryId', directoryId);
+
+    await axios.post(`${API_BASE}/upload`, formData, { headers: formData.getHeaders() });
+
+    const redirectPath = directoryId ? `/browser/directory/${directoryId}` : '/browser';
+    res.redirect(redirectPath);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).render('error', { title: 'Error', message: 'Upload failed' });
   }
 });
 

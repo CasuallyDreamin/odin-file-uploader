@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import expressLayouts from 'express-ejs-layouts';
 import apiRoutes from './routes/api.js';
 import fileBrowserRoutes from './routes/file_browser.js';
 import { PrismaClient } from '@prisma/client';
@@ -11,7 +12,9 @@ dotenv.config();
 export const prisma = new PrismaClient(); // export for route modules
 
 const app = express();
+
 app.use(express.json());
+app.use(express.urlencoded(({extended: true})));
 
 // Ensure uploads directory exists
 export const UPLOAD_DIR = process.env.UPLOAD_DIR
@@ -24,6 +27,8 @@ const __dirname = path.resolve();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(expressLayouts);
+app.set('layout', 'layout');
 
 // Mount routes
 app.use("/", fileBrowserRoutes);

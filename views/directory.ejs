@@ -1,26 +1,28 @@
 <h2>Directory: <%= directory.name %></h2>
 
-<h3>Files</h3>
-<ul>
-  <% if (directory.files.length) { %>
-    <% directory.files.forEach(f => { %>
-      <li>
-        <a href="/api/files/<%= f.id %>/download"><%= f.originalName %></a>
-        (<%= (f.size / 1024).toFixed(1) %> KB)
-      </li>
-    <% }) %>
-  <% } else { %>
-    <p>No files in this directory.</p>
-  <% } %>
-</ul>
-
 <h3>Subdirectories</h3>
 <ul>
-  <% if (directory.children.length) { %>
-    <% directory.children.forEach(child => { %>
-      <li><a href="/directory/<%= child.id %>"><%= child.name %></a></li>
-    <% }) %>
-  <% } else { %>
-    <p>No subdirectories.</p>
-  <% } %>
+  <% directory.children.forEach(child => { %>
+    <li>
+      <a href="/browser/directory/<%= child.id %>"><%= child.name %></a>
+    </li>
+  <% }) %>
 </ul>
+
+<form action="/browser/directory" method="POST">
+  <input type="hidden" name="parentId" value="<%= directory.id %>">
+  <input type="text" name="name" placeholder="New subdirectory" required>
+  <button type="submit">Create Directory</button>
+</form>
+
+<h3>Files</h3>
+<ul>
+  <% directory.files.forEach(file => { %>
+    <li>
+      <%= file.originalName %> - 
+      <a href="/api/files/<%= file.id %>/download">Download</a>
+    </li>
+  <% }) %>
+</ul>
+
+<a href="/browser/upload?directoryId=<%= directory.id %>">Upload Files Here</a>
